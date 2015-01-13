@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WDI7 Chat</title>
+  </head>
+  <body>
+    <input type="text" id="chat-box">
+
+    <div id="chat-log">
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.2.1/socket.io.min.js"></script>
+    <script>
+      var socket;
+      var username = "You";
+      var chatBox = document.getElementById("chat-box");
+      var chatLog = document.getElementById("chat-log");
+
+      chatBox.onkeypress = function(event) {
+        if (event.keyCode == 13) {
+          var chatMessage = chatBox.value;
+
+          if (chatMessage.length > 0) {
+            if (chatMessage[0] === "/") {
+              var fullCommand = chatMessage.split(" ");
+              var command = fullCommand.shift().replace("/","");
+              var params = fullCommand;
+              socket.emit("commands", { command: command, params: params });
+            } else {
+              socket.emit("messages", { message: chatMessage });
+            }
+
+            chatBox.value = "";
+          }
+        }
+      }
+
+      window.onload = function() {
+        socket = io.connect("http://localhost:8080");
+
+        socket.on("info", function(data) {
+          chatLog.innerHTML += "<p>Status: " + data.status + "</p>";
+        });
+
+        socket.on("messages", function(data) {
+          chatLog.innerHTML += "<p>" + (data.username || "Server") + ": " + data.message + "</p>";
+        });
+      }
+    </script>
+  </body>
+</html>
